@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.3' apply false
+    id 'io.spring.dependency-management' version '1.1.4' apply false
+}
+
+// 모든 프로젝트(루트 포함) 공통 설정
+allprojects {
+    group = 'wms.msa'
+    version = '1.0-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+// 자식 모듈(subprojects)들에게만 Spring Boot 설정을 강제로 주입!
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencies {
+        // 스프링 웹 & JPA
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // 이게 있어야 persistence가 안 뜹니다!
+
+        // PostgreSQL
+        runtimeOnly 'org.postgresql:postgresql'
+
+        // Lombok (이 3줄이 다 있어야 빨간줄이 사라집니다)
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testCompileOnly 'org.projectlombok:lombok'
+        testAnnotationProcessor 'org.projectlombok:lombok'
+    }
+}
