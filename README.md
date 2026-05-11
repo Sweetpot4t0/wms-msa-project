@@ -1,36 +1,43 @@
-📦 WMS Inventory Management System
+WMS Inventory Management System
 Spring Boot & React를 활용한 엔드 투 엔드 재고 관리 프로젝트
 
-단순한 데이터 조회를 넘어, 데이터베이스 설계부터 백엔드 API 구축, 프론트엔드 연동까지 전 과정을 직접 구현한 프로젝트입니다.
+🛠 Tech Stacks
+Infrastructure & Database
 
-### 🛠 Tech Stacks
-### Infrastructure & Database
 PostgreSQL: 관계형 데이터베이스 설계 및 관리.
 
 DBeaver: DB 관리 및 SQL 쿼리 최적화 테스트.
 
-### Backend (API Server)
+Backend (API Server)
+
 Java 21 / Spring Boot 3.2: RESTful API 서버 구축.
 
-Spring Data JPA: 객체 지향적 데이터 핸들링 및 DB 연동.
+Spring Data JPA: 객체 지향적 데이터 핸들링 및 낙관적 락(Optimistic Lock) 구현.
 
-### Frontend (UI/UX)
+Apache POI: 서버 사이드 엑셀 리포트 생성 및 다운로드 구현.
+
+Frontend (UI/UX)
+
 React (Vite): 컴포넌트 기반 UI 구현.
 
-State Management: useState, useEffect를 이용한 실시간 데이터 렌더링.
+Recharts: 재고 현황 시각화를 위한 차트 라이브러리 적용.
 
-### Key Features & Implementation
-REST API Architecture: Spring Boot를 이용해 데이터 조회(GET) 및 등록(POST) API를 설계하고 React와 연결.
+File Handling: Blob 객체를 이용한 엑셀 파일 다운로드 로직 구현.
 
-CORS Configuration: 서로 다른 포트(8080-5173) 간의 통신 보안 이슈 해결.
+Key Features & Implementation
+Optimistic Locking: @Version을 이용해 동시성 문제를 제어하고 데이터 무결성 보장.
 
-Full-Stack Connectivity: DB 데이터가 서버를 거쳐 프론트엔드 표(Table)에 뿌려지기까지의 전체 흐름(Data Flow) 제어.
+Inventory History: 재고 수량 변경 시 입/출고 이력을 자동으로 기록하고 조회하는 기능.
 
-Data Integrity: DB SERIAL 타입을 이용한 ID 자동 생성 및 트랜잭션 관리.
+Excel Export: 전체 재고 현황을 .xlsx 형식으로 추출하는 기능 구현.
 
-### 📝 Troubleshooting & Insight
-Environment Setup: 초기 로컬 환경에서 DB 연결 설정 및 리스트 비활성화 이슈를 해결하며 툴의 구성 원리를 파악함.
+Real-time Stats: Recharts를 활용해 재고 상태(안정/부족/품절)를 시각적으로 대시보드에 구현.
 
-State Flow: 프론트엔드에서 fetch API를 통해 백엔드 데이터를 비동기로 처리하고, UI를 즉각 업데이트하는 로직 구현.
+CORS Configuration: 서로 다른 포트 간의 통신 보안 이슈 해결.
 
-Future Plan: 향후 재고 삭제, 수정(Update/Delete) 기능 추가 및 UI 라이브러리를 적용한 디자인 고도화 예정.
+📝 Troubleshooting & Insight
+Concurrency Control: 낙관적 락 적용 시 기존 데이터의 Version 필드가 NULL일 경우 발생하는 에러를 DB 마이그레이션 쿼리를 통해 해결함.
+
+File Stream Handling: 서버에서 생성한 바이너리 데이터를 프론트엔드에서 파일 형태로 변환하여 사용자에게 전달하는 흐름 파악.
+
+Refactoring: 테이블 명칭 불일치 및 필드 타입 에러를 디버깅하며 백엔드와 DB 간의 매핑 구조를 명확히 이해함.
