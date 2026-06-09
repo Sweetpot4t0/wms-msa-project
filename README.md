@@ -10,6 +10,7 @@
 프로젝트에 적용된 기술 스택과 MSA 구성 요소입니다.
 
 | 구분 | 주요 기술 | 역할 및 구현 내용 |
+| :--- | :--- | :--- |
 | **Infrastructure** | **Docker, Docker Compose** | 컨테이너 기반 환경 격리 및 서비스 통합 관리 |
 | **CI/CD** | **GitHub Actions** | 자동화된 빌드 및 배포 파이프라인 (구축 중) |
 | **Backend** | Java 21, Spring Boot 3.2 | RESTful API, 동시성 제어(Optimistic Lock) |
