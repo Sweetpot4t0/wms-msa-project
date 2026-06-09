@@ -1,43 +1,28 @@
-WMS Inventory Management System
-Spring Boot & React를 활용한 엔드 투 엔드 재고 관리 프로젝트
+# 📦 WMS Inventory Management System
+**Spring Boot & React를 활용한 MSA 기반의 실시간 재고 관리 프로젝트**
 
-🛠 Tech Stacks
-Infrastructure & Database
+## 🏗 System Overview
+본 프로젝트는 서비스 확장성과 유지보수성을 고려하여 **Microservices Architecture(MSA)**를 채택하였으며, **Docker**를 통해 개발/운영 환경을 표준화하였습니다.
 
-PostgreSQL: 관계형 데이터베이스 설계 및 관리.
 
-DBeaver: DB 관리 및 SQL 쿼리 최적화 테스트.
 
-Backend (API Server)
+## 🛠 Tech Stack & Architecture
+프로젝트에 적용된 기술 스택과 MSA 구성 요소입니다.
 
-Java 21 / Spring Boot 3.2: RESTful API 서버 구축.
+| 구분 | 주요 기술 | 역할 및 구현 내용 |
+| **Infrastructure** | **Docker, Docker Compose** | 컨테이너 기반 환경 격리 및 서비스 통합 관리 |
+| **CI/CD** | **GitHub Actions** | 자동화된 빌드 및 배포 파이프라인 (구축 중) |
+| **Backend** | Java 21, Spring Boot 3.2 | RESTful API, 동시성 제어(Optimistic Lock) |
+| **Frontend** | React (Vite), Nginx | 컴포넌트 기반 UI, SSE 기반 실시간 상태 갱신 |
+| **Database** | PostgreSQL | 관계형 DB 설계 및 Docker Volume 영속성 관리 |
+| **Util/Batch** | Apache POI, Spring Batch | 엑셀 리포트 자동 생성 및 대량 데이터 처리 |
 
-Spring Data JPA: 객체 지향적 데이터 핸들링 및 낙관적 락(Optimistic Lock) 구현.
+## 💡 Key Features & Troubleshooting
+* **동시성 제어**: `@Version` 필드를 활용한 낙관적 락(Optimistic Lock) 구현으로 데이터 무결성 보장.
+* **실시간 대시보드**: Nginx 역방향 프록시 설정을 통한 **SSE(Server-Sent Events)** 연결 최적화.
+* **데이터 영속성**: Docker Volume 설정을 통해 컨테이너 재시작 시에도 데이터 유실 방지.
+* **트러블슈팅**: 
+    * DB 마이그레이션 쿼리를 통한 필드 타입 및 스키마 불일치 이슈 해결.
+    * 서버 사이드 스트림 처리(Blob)를 통한 프론트엔드 엑셀 다운로드 최적화.
 
-Apache POI: 서버 사이드 엑셀 리포트 생성 및 다운로드 구현.
-
-Frontend (UI/UX)
-
-React (Vite): 컴포넌트 기반 UI 구현.
-
-Recharts: 재고 현황 시각화를 위한 차트 라이브러리 적용.
-
-File Handling: Blob 객체를 이용한 엑셀 파일 다운로드 로직 구현.
-
-Key Features & Implementation
-Optimistic Locking: @Version을 이용해 동시성 문제를 제어하고 데이터 무결성 보장.
-
-Inventory History: 재고 수량 변경 시 입/출고 이력을 자동으로 기록하고 조회하는 기능.
-
-Excel Export: 전체 재고 현황을 .xlsx 형식으로 추출하는 기능 구현.
-
-Real-time Stats: Recharts를 활용해 재고 상태(안정/부족/품절)를 시각적으로 대시보드에 구현.
-
-CORS Configuration: 서로 다른 포트 간의 통신 보안 이슈 해결.
-
-📝 Troubleshooting & Insight
-Concurrency Control: 낙관적 락 적용 시 기존 데이터의 Version 필드가 NULL일 경우 발생하는 에러를 DB 마이그레이션 쿼리를 통해 해결함.
-
-File Stream Handling: 서버에서 생성한 바이너리 데이터를 프론트엔드에서 파일 형태로 변환하여 사용자에게 전달하는 흐름 파악.
-
-Refactoring: 테이블 명칭 불일치 및 필드 타입 에러를 디버깅하며 백엔드와 DB 간의 매핑 구조를 명확히 이해함.
+---
