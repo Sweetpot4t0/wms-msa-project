@@ -45,5 +45,11 @@ subprojects {
         //Excel
         implementation 'org.apache.poi:poi:5.2.3'
         implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
+        //  Spring Batch 의존성 추가
+        implementation 'org.springframework.boot:spring-boot-starter-batch'
+
+        // 배치 테스트를 위한 의존성
+        testImplementation 'org.springframework.batch:spring-batch-test'
     }
 }

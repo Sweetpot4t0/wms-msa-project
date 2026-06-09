@@ -14,13 +14,41 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [loginInfo, setLoginInfo] = useState({ username: '', password: '' });
 
+  // --- 실시간 알림 관련 상태 ---
+  const [notifications, setNotifications] = useState([]);
+
   // 공통 헤더 (토큰 포함)
   const getAuthHeader = () => ({
     'Authorization': `Bearer ${localStorage.getItem('token')}`,
     'Content-Type': 'application/json'
   });
 
-  // [추가] 엑셀 다운로드 로직
+  // SSE 실시간 알림 수신 및 연결 관리
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const eventSource = new EventSource('http://localhost:8081/api/inventory/notifications');
+
+    eventSource.addEventListener('connect', (e) => {
+      console.log("SSE 파이프라인 연결 완료:", e.data);
+    });
+
+    eventSource.addEventListener('stock-warning', (e) => {
+      const message = e.data;
+      setNotifications((prev) => [...prev, { id: Date.now() + Math.random(), message }]);
+    });
+
+    eventSource.onerror = (err) => {
+      console.error("SSE 연결에 문제가 발생했습니다. 재연결을 시도합니다.");
+      eventSource.close();
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [isLoggedIn]);
+
+  // 전체 재고 목록 엑셀 다운로드 로직
   const handleExcelDownload = () => {
     fetch('http://localhost:8081/api/inventory/excel', {
       method: 'GET',
@@ -46,6 +74,34 @@ function App() {
     .catch(err => console.error("엑셀 다운로드 실패:", err));
   };
 
+  // 💡 [추가] 일일 정산 보고서 엑셀 다운로드 로직
+  const handleDailyReportExcelDownload = () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    fetch(`http://localhost:8081/api/inventory/report/excel?date=${todayStr}`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+    })
+    .then(res => {
+      if (res.status === 403) {
+        handleLogout();
+        throw new Error('Unauthorized');
+      }
+      return res.blob();
+    })
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `daily_inventory_report_${todayStr}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    })
+    .catch(err => console.error("일일 보고서 엑셀 다운로드 실패:", err));
+  };
+
   const fetchProducts = (page = 0, name = searchTerm) => {
     if (!isLoggedIn) return;
     fetch(`http://localhost:8081/api/inventory?name=${name}&page=${page}&size=10`, {
@@ -59,6 +115,8 @@ function App() {
         return res.json();
       })
       .then(data => {
+
+        console.log("백엔드 응답 데이터 구조 확인:", data);
         setProducts(data.content || []);
         setTotalPages(data.totalPages || 0);
         setCurrentPage(data.number || 0);
@@ -108,6 +166,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsLoggedIn(false);
+    setNotifications([]);
     alert("로그아웃 되었습니다.");
   };
 
@@ -224,7 +283,18 @@ function App() {
   }
 
   return (
-    <div style={containerStyle}>
+    <div style={{ ...containerStyle, position: 'relative' }}>
+
+      {/* 실시간 우측 상단 슬라이드 알림 영역 */}
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {notifications.map((n) => (
+          <div key={n.id} style={{ backgroundColor: '#ff4d4f', color: 'white', padding: '15px 20px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minWidth: '320px', fontWeight: 'bold' }}>
+            <span>⚠️ {n.message}</span>
+            <button onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))} style={{ background: 'none', border: 'none', color: 'white', fontSize: '16px', cursor: 'pointer', marginLeft: '15px' }}>✕</button>
+          </div>
+        ))}
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', marginBottom: '40px' }}>
         <h1 onClick={() => setCurrentView('dashboard')} style={{ cursor: 'pointer', color: '#1a73e8', margin: 0 }}>
           📦 WMS MSA SYSTEM
@@ -388,7 +458,14 @@ function App() {
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <button onClick={() => setCurrentView('dashboard')} style={{ ...btnStyle, backgroundColor: '#6c757d', color: 'white', border: 'none' }}>⬅ 뒤로가기</button>
-            <h2 style={{ margin: 0 }}>📜 입/출고 히스토리</h2>
+
+            {/* 📊 일일 정산 보고서 엑셀 다운로드 버튼 추가 */}
+            <button
+              onClick={handleDailyReportExcelDownload}
+              style={{ ...btnStyle, backgroundColor: '#007bff', color: 'white', border: 'none', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              📊 오늘 정산 엑셀 다운로드
+            </button>
           </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>

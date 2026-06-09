@@ -1,10 +1,13 @@
 package inventory.controller;
 
+import inventory.entity.DailyReport;
 import inventory.entity.Product;
 import inventory.entity.StockHistory;
+import inventory.repository.DailyReportRepository;
 import inventory.repository.ProductRepository;
 import inventory.repository.StockHistoryRepository;
-import inventory.service.ExcelService; // [추가]
+import inventory.service.ExcelService;
+import inventory.service.NotificationService; // [추가]
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,8 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter; // [추가]
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,20 +36,28 @@ public class InventoryController {
 
     private final ProductRepository productRepository;
     private final StockHistoryRepository stockHistoryRepository;
-    private final ExcelService excelService; // [추가]
+    private final ExcelService excelService;
+    private final NotificationService notificationService; // [추가]
+    private final DailyReportRepository dailyReportRepository;
 
-    // [수정] 생성자에 ExcelService 추가
+
     public InventoryController(ProductRepository productRepository,
                                StockHistoryRepository stockHistoryRepository,
-                               ExcelService excelService) {
+                               ExcelService excelService,
+                               NotificationService notificationService, DailyReportRepository dailyReportRepository) {
         this.productRepository = productRepository;
         this.stockHistoryRepository = stockHistoryRepository;
         this.excelService = excelService;
+        this.notificationService = notificationService;
+        this.dailyReportRepository = dailyReportRepository;
     }
 
-    /**
-     * [통합 및 페이징 적용]
-     */
+    // [추가] 실시간 알림 구독 엔드포인트
+    @GetMapping(value = "/notifications", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribeNotifications() {
+        return notificationService.subscribe();
+    }
+
     @GetMapping
     public Page<Product> getProducts(
             @RequestParam(defaultValue = "") String name,
@@ -88,6 +102,11 @@ public class InventoryController {
             history.setType(diff > 0 ? "입고" : "출고");
             stockHistoryRepository.save(history);
 
+            // [추가] 재고가 10개 미만으로 떨어지면 실시간 알림 전송 권장
+            if (newStock < 10) {
+                notificationService.sendNotification(product.getName(), newStock);
+            }
+
             return ResponseEntity.ok(updatedProduct);
 
         } catch (ObjectOptimisticLockingFailureException e) {
@@ -129,12 +148,26 @@ public class InventoryController {
     @GetMapping("/excel")
     public ResponseEntity<InputStreamResource> downloadExcel() throws IOException {
         String filename = "inventory_report.xlsx";
-
         InputStreamResource file = new InputStreamResource(excelService.downloadProductExcel());
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
+    }
+    @GetMapping("/report/excel")
+    public ResponseEntity<InputStreamResource> downloadReportExcel(@RequestParam("date") String dateStr) {
+        // 파라미터로 받은 날짜(예: 2026-06-08)의 데이터를 조회
+        LocalDate date = LocalDate.parse(dateStr);
+        List<DailyReport> reports = dailyReportRepository.findByReportDate(date);
+
+        ByteArrayInputStream in = excelService.downloadDailyReportExcel(reports);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=daily_inventory_report_" + dateStr + ".xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 }

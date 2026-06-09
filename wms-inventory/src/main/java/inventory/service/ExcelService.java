@@ -1,5 +1,6 @@
 package inventory.service;
 
+import inventory.entity.DailyReport;
 import inventory.entity.Product;
 import inventory.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,37 @@ public class ExcelService {
 
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    public ByteArrayInputStream downloadDailyReportExcel(List<DailyReport> reports) {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("일일 재고 정산 보고서");
+
+            // 헤더 행 생성
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {"보고서 일자", "상품 ID", "상품명", "하루 총 입고량", "하루 총 출고량", "마감 재고"};
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+            }
+
+            // 데이터 행 채우기
+            int rowIdx = 1;
+            for (DailyReport report : reports) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(report.getReportDate().toString());
+                row.createCell(1).setCellValue(report.getProductId());
+                row.createCell(2).setCellValue(report.getProductName());
+                row.createCell(3).setCellValue(report.getTotalIncoming());
+                row.createCell(4).setCellValue(report.getTotalOutgoing());
+                row.createCell(5).setCellValue(report.getFinalStock());
+            }
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("엑셀 파일 생성 중 오류 발생", e);
         }
     }
 }

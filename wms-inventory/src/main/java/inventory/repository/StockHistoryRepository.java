@@ -2,6 +2,8 @@ package inventory.repository;
 
 import inventory.entity.StockHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface StockHistoryRepository extends JpaRepository<StockHistory, Long> {
@@ -10,4 +12,6 @@ public interface StockHistoryRepository extends JpaRepository<StockHistory, Long
 
     // 전체 이력을 최신순으로 보기
     List<StockHistory> findAllByOrderByCreatedAtDesc();
+    // StockHistoryRepository.java 안의 내용
+    List<StockHistory> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }
