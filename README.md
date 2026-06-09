@@ -27,3 +27,5 @@
     * 서버 사이드 스트림 처리(Blob)를 통한 프론트엔드 엑셀 다운로드 최적화.
 
 ---
+
+<img width="762" height="1041" alt="Image" src="https://github.com/user-attachments/assets/d041bd9d-0f72-4029-91d3-3f89cb40d283" />
