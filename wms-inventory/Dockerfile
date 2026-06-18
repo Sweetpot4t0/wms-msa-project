@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 
 # 루트(/app)에서 전체 설정을 참조하여 wms-inventory 모듈만 빌드
-RUN gradle :wms-inventory:build -x test --no-daemon
+RUN gradle :wms-inventory:build -x test --no-daemon --stacktrace --info
 
 # 2단계: 실행 환경
 FROM eclipse-temurin:17-jdk-jammy
