@@ -17,18 +17,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # [수정] context를 루트(.)로 변경하여 전체 프로젝트 구조를 볼 수 있게 합니다.
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
-          context: ./wms-inventory
+          context: .
           file: ./wms-inventory/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-inventory:latest
 
+      # [수정] 프론트엔드도 마찬가지로 context를 루트(.)로 변경
       - name: Build and Push Frontend
         uses: docker/build-push-action@v4
         with:
-          context: ./wms-frontend
+          context: .
           file: ./wms-frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-frontend:latest
