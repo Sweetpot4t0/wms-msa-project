@@ -1,5 +1,6 @@
 package inventory.config;
 
+import inventory.repository.MemberRepository;
 import inventory.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +8,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -18,14 +22,27 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor // 필터 주입
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final MemberRepository memberRepository; // DB 연동을 위해 추가
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    // [핵심] DB에서 사용자 정보를 가져오도록 설정
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> memberRepository.findByUsername(username)
+                .map(member -> User.builder()
+                        .username(member.getUsername())
+                        .password(member.getPassword())
+                        .roles(member.getRole().replace("ROLE_", ""))
+                        .build())
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
     }
 
     @Bean
@@ -35,12 +52,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll() // 로그인 창구는 모두 허용
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/inventory/notifications").permitAll()
                         .requestMatchers("/api/inventory/report/excel").permitAll()
-                        .anyRequest().authenticated()               // 나머지는 토큰 검사 필수
+                        .anyRequest().authenticated()
                 )
-                //  시큐리티의 기본 필터가 동작하기 전에 우리 JWT 필터를 먼저 실행
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -49,16 +65,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // 리액트(Vite) 기본 포트인 5173 허용, localhost는 도커라이징용
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173","http://localhost"));
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:5173", "http://localhost"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
 }
