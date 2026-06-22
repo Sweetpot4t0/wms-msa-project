@@ -38,7 +38,7 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-frontend:latest
 
   deploy:
-    needs: build-and-push  # 위 작업이 성공해야만 실행됨
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2
@@ -48,7 +48,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            # 서버에서 이미지 가져와서 컨테이너 재실행
             cd /home/ubuntu/wms-inventory
             docker compose pull
             docker compose up -d
