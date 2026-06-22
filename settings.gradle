@@ -1,2 +1,3 @@
 rootProject.name = 'wms-msa'
 include 'wms-inventory'
+include 'wms-frontend'
