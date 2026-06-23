@@ -21,8 +21,12 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
-          # 기존 app.jar가 폴더든 파일이든 강제 삭제 후 새로 복사
-          rm -rf wms-inventory/app.jar
+          # 1. 빌드된 파일이 있는지 확인 (에러 발생 시 로그에 표시됨)
+          ls -l wms-inventory/build/libs/
+          # 2. 확실하게 파일이 있는 경로에서 복사
+          # 기존 app.jar 제거
+          rm -f wms-inventory/app.jar
+          # 3. libs 폴더 안의 모든 jar 파일을 wms-inventory 루트로 복사
           cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
 
       - name: Set up Node.js
