@@ -17,14 +17,14 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      # 1. 백엔드 빌드
       - name: Build Backend
         run: |
           chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
+          # 기존 app.jar가 폴더든 파일이든 강제 삭제 후 새로 복사
+          rm -rf wms-inventory/app.jar
           cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
 
-      # 2. 프론트엔드 빌드 (Node.js 설정 및 빌드)
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -74,6 +74,6 @@ jobs:
           script: |
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
             cd /home/ubuntu/wms-inventory
-            docker compose pull
-            docker compose up -d
+            docker-compose pull
+            docker-compose up -d
             docker image prune -f
