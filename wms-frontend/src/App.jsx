@@ -11,7 +11,7 @@ function App() {
   const [totalPages, setTotalPages] = useState(0);
 
   // 💡 서버 IP 주소를 여기에 설정하세요!
-  const API_BASE_URL = 'http://43.201.96.80:8081';
+  const API_BASE_URL = '';
 
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
   const [loginInfo, setLoginInfo] = useState({ username: '', password: '' });
