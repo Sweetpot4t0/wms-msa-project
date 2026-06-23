@@ -19,8 +19,9 @@ jobs:
 
       - name: Build Backend
         run: |
-         chmod +x ./gradlew
+          chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
+          # 빌드된 jar 파일을 wms-inventory 폴더 안으로 직접 복사합니다.
           find . -name "*.jar" | grep "build/libs" | head -n 1 | xargs -I {} cp {} ./wms-inventory/app.jar
 
       - name: Set up Docker Buildx
@@ -35,7 +36,7 @@ jobs:
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
-          context: ./wms-inventory/build/docker
+          context: ./wms-inventory
           file: ./wms-inventory/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-inventory:latest
