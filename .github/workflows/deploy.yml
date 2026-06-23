@@ -17,12 +17,24 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      # 1. 백엔드 빌드
       - name: Build Backend
         run: |
           chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
-          # 빌드된 jar 파일을 wms-inventory 폴더 안으로 직접 복사합니다.
-          find . -name "*.jar" | grep "build/libs" | head -n 1 | xargs -I {} cp {} ./wms-inventory/app.jar
+          cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
+
+      # 2. 프론트엔드 빌드 (Node.js 설정 및 빌드)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Build Frontend
+        run: |
+          cd wms-frontend
+          npm install
+          npm run build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
