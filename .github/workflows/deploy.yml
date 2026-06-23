@@ -11,20 +11,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 1. 백엔드(Java/Gradle) 빌드
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build Backend with Gradle
+      - name: Build Backend
         run: |
           chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
-          cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
+          mkdir -p ./wms-inventory/build/docker
+          cp wms-inventory/build/libs/*.jar ./wms-inventory/build/docker/app.jar
 
-      # 2. Docker 이미지 빌드 및 푸시
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -37,7 +36,7 @@ jobs:
       - name: Build and Push Backend
         uses: docker/build-push-action@v4
         with:
-          context: ./wms-inventory
+          context: ./wms-inventory/build/docker
           file: ./wms-inventory/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-inventory:latest
