@@ -21,8 +21,8 @@ jobs:
       - name: Build Backend with Gradle
         run: |
           chmod +x ./gradlew
-          ./gradlew clean build
-           cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
+          ./gradlew :wms-inventory:clean :wms-inventory:build
+          cp wms-inventory/build/libs/*.jar wms-inventory/app.jar
 
       # 2. Docker 이미지 빌드 및 푸시
       - name: Set up Docker Buildx
