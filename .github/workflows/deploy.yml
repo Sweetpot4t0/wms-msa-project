@@ -62,7 +62,7 @@ jobs:
           file: ./wms-frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/wms-frontend:latest
-
+#last
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
