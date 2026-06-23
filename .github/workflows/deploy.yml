@@ -19,10 +19,9 @@ jobs:
 
       - name: Build Backend
         run: |
-          chmod +x ./gradlew
+         chmod +x ./gradlew
           ./gradlew :wms-inventory:clean :wms-inventory:build
-          mkdir -p ./wms-inventory/build/docker
-          cp wms-inventory/build/libs/*.jar ./wms-inventory/build/docker/app.jar
+          find . -name "*.jar" | grep "build/libs" | head -n 1 | xargs -I {} cp {} ./wms-inventory/app.jar
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
