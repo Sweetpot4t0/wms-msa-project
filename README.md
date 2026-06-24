@@ -11,7 +11,7 @@
 | :--- | :--- | :--- |
 | **Cloud** | **AWS EC2** | 클라우드 기반 인프라 호스팅 및 네트워크 관리 |
 | **Infrastructure** | **Docker, Docker Compose** | 컨테이너 격리 및 서비스 통합 관리 |
-| **CI/CD** | **GitHub Actions** | 자동화된 빌드 및 배포 파이프라인 (구축 중) |
+| **CI/CD** | **GitHub Actions** | 자동화된 빌드 및 배포 파이프라인  |
 | **Backend** | Java 21, Spring Boot 3.2 | RESTful API, 동시성 제어(Optimistic Lock) |
 | **Frontend** | React (Vite), Nginx | 컴포넌트 기반 UI, SSE 기반 실시간 상태 갱신 |
 | **Database** | PostgreSQL | 관계형 DB 설계 및 Docker Volume 영속성 관리 |
@@ -27,7 +27,7 @@
     * **운영 환경 대응**: 인스턴스 IP 변경 및 컨테이너 생명주기에 따른 서비스 안정성 관리 방안 수립.
 
 ## 🚀 Deployment & Maintenance
-본 프로젝트는 EC2 환경에서 우분투로 관리하였습니다.
+AWS EC2
 ---
 
 <img width="762" height="1041" alt="Image" src="https://github.com/user-attachments/assets/d041bd9d-0f72-4029-91d3-3f89cb40d283" />
