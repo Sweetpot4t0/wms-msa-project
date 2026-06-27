@@ -20,10 +20,13 @@ graph TB
         Backend -->|JPA| DB
     end
 
-    CI["GitHub Actions CI/CD"]
+    Dev["👨‍💻 개발자"]
+    GH["GitHub"]
+    GHA["GitHub Actions<br/>(CI/CD)"]
 
-    User -->|"HTTP / SSE"| Nginx
-    CI -.->|"빌드 & 배포"| EC2
+    User -->|"HTTP / SSE<br/>(80포트)"| Nginx
+    Dev -->|"git push"| GH --> GHA
+    GHA -.->|"빌드 & 배포"| EC2
 
     classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
     classDef web fill:#FFF8E1,stroke:#F9A825,stroke-width:1.5px,color:#5D4037;
@@ -35,7 +38,7 @@ graph TB
     class Nginx web
     class Backend server
     class DB storage
-    class CI ci
+    class Dev,GH,GHA ci
     style EC2 fill:#FAFAFA,stroke:#90A4AE,stroke-width:1.5px
 ```
 
@@ -116,7 +119,4 @@ flowchart TD
     * **운영 환경 대응**: 인스턴스 IP 변경 및 컨테이너 생명주기에 따른 서비스 안정성 관리 방안 수립.
 
 ## 🚀 Deployment & Maintenance
-AWS EC2
----
-
-<img width="762" height="1041" alt="Image" src="https://github.com/user-attachments/assets/d041bd9d-0f72-4029-91d3-3f89cb40d283" />
+배포/운영 구조는 위 [배포 아키텍처 다이어그램](#1-배포-아키텍처-infra)을 참고하세요. AWS EC2 위에서 Docker Compose로 컨테이너를 표준화하고, GitHub Actions로 빌드·배포를 자동화합니다.
