@@ -4,6 +4,95 @@
 ## 🏗 System Overview
 본 프로젝트는 서비스 확장성과 유지보수성을 고려하여 **Microservices Architecture(MSA)**를 채택하였으며, **AWS EC2** 환경 위에서 **Docker**를 통해 개발/운영 환경을 표준화하였습니다.
 
+## 🔄 Architecture & Flow
+
+### 1) 배포 아키텍처 (Infra)
+```mermaid
+graph TB
+    User(["👤 사용자 브라우저"])
+
+    subgraph EC2["☁️ AWS EC2 — Docker Compose"]
+        direction LR
+        Nginx["Nginx<br/>정적 파일 서빙 + 리버스 프록시"]
+        Backend["Spring Boot<br/>wms-inventory :8081"]
+        DB[("PostgreSQL :5432")]
+        Nginx -->|"/api/**"| Backend
+        Backend -->|JPA| DB
+    end
+
+    CI["GitHub Actions CI/CD"]
+
+    User -->|"HTTP / SSE"| Nginx
+    CI -.->|"빌드 & 배포"| EC2
+
+    classDef client fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+    classDef web fill:#FFF8E1,stroke:#F9A825,stroke-width:1.5px,color:#5D4037;
+    classDef server fill:#FFF3E0,stroke:#EF6C00,stroke-width:1.5px,color:#E65100;
+    classDef storage fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20;
+    classDef ci fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1.5px,color:#4A148C;
+
+    class User client
+    class Nginx web
+    class Backend server
+    class DB storage
+    class CI ci
+    style EC2 fill:#FAFAFA,stroke:#90A4AE,stroke-width:1.5px
+```
+
+### 2) 애플리케이션 요청 흐름
+```mermaid
+flowchart TD
+    subgraph FE["🖥️ React Frontend"]
+        Login["로그인 화면"]
+        Dash["대시보드<br/>검색·등록·히스토리·통계"]
+    end
+
+    subgraph BE["⚙️ Spring Boot Backend"]
+        AuthC["AuthController"]
+        JwtP["JwtTokenProvider"]
+        Filter["JwtAuthenticationFilter"]
+        InvC["InventoryController"]
+        Notify["NotificationService (SSE)"]
+        Excel["ExcelService (Apache POI)"]
+        Sched["BatchScheduler<br/>매일 새벽 1시"]
+        BatchJob["Spring Batch Job<br/>Reader → Processor → Writer"]
+    end
+
+    DB[("PostgreSQL<br/>Product · Member ·<br/>StockHistory · DailyReport")]
+
+    Login -- "①ID/PW" --> AuthC
+    AuthC -- "②검증 + 토큰생성" --> JwtP
+    JwtP -- "③JWT 발급" --> Login
+    Login -- "④토큰 저장 후 진입" --> Dash
+
+    Dash -- "⑤Bearer Token 요청" --> Filter
+    Filter -- "⑥인증 성공" --> InvC
+    InvC -- "재고 CRUD / 페이징 조회" --> DB
+    InvC -- "재고 10개 미만 시" --> Notify
+    Notify -- "⑦실시간 알림(SSE)" --> Dash
+    InvC -- "엑셀 다운로드 요청" --> Excel
+    Excel -- "조회" --> DB
+
+    Sched -- "⏰트리거" --> BatchJob
+    BatchJob -- "오늘자 StockHistory 합산 후 DailyReport 저장" --> DB
+
+    classDef frontend fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1,font-weight:bold;
+    classDef auth fill:#F3E5F5,stroke:#6A1B9A,stroke-width:1.5px,color:#4A148C;
+    classDef inventory fill:#FFF3E0,stroke:#EF6C00,stroke-width:1.5px,color:#E65100;
+    classDef batch fill:#E0F2F1,stroke:#00695C,stroke-width:1.5px,color:#004D40;
+    classDef storage fill:#E8F5E9,stroke:#2E7D32,stroke-width:1.5px,color:#1B5E20;
+
+    class Login,Dash frontend
+    class AuthC,JwtP,Filter auth
+    class InvC,Notify,Excel inventory
+    class Sched,BatchJob batch
+    class DB storage
+    style FE fill:#FAFAFA,stroke:#90A4AE,stroke-width:1.5px
+    style BE fill:#FCFCFC,stroke:#B0BEC5,stroke-width:1.5px
+```
+
+> **흐름 요약**: 로그인(JWT 발급) → 모든 API 요청은 `JwtAuthenticationFilter`에서 토큰 검증 → 재고 변경 시 `@Version` 낙관적 락으로 동시성 제어 + `StockHistory` 기록 → 재고 10개 미만이면 SSE로 실시간 알림 → 매일 새벽 1시 Spring Batch가 하루치 `StockHistory`를 정산해 `DailyReport`로 적재.
+
 ## 🛠 Tech Stack & Architecture
 프로젝트에 적용된 기술 스택과 MSA 구성 요소입니다.
 
